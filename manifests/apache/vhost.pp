@@ -119,7 +119,7 @@ class puppetboard::apache::vhost (
 
   if $enable_ldap_auth {
     $ldap_additional_includes = [ "${::puppetboard::params::apache_confd}/puppetboard-ldap.conf" ]
-    $ldap_require = File["${::puppetboard::params::apache_confd}/puppetboard-ldap.conf"]
+    $vhost_require = [ File["${docroot}/wsgi.py"], File["${::puppetboard::params::apache_confd}/puppetboard-ldap.conf"] ]
     file { "${::puppetboard::params::apache_confd}/puppetboard-ldap.conf":
       ensure  => present,
       owner   => 'root',
@@ -131,7 +131,7 @@ class puppetboard::apache::vhost (
   }
   else {
     $ldap_additional_includes = undef
-    $ldap_require = undef
+    $vhost_require = File["${docroot}/wsgi.py"]
   }
   ::apache::vhost { $vhost_name:
     port                        => $port,
@@ -145,7 +145,7 @@ class puppetboard::apache::vhost (
     wsgi_script_aliases         => $wsgi_script_aliases,
     wsgi_daemon_process_options => $wsgi_daemon_process_options,
     override                    => $override,
-    require                     => [ File["${docroot}/wsgi.py"], $ldap_require ],
+    require                     => $vhost_require,
     notify                      => Service[$::puppetboard::params::apache_service],
   }
 
